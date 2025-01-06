@@ -1,7 +1,7 @@
 package il.ac.technion.cs.sd.books.lib
-import il.ac.technion.cs.sd.dummy.StorageDummyFiles
-import il.ac.technion.cs.sd.grades.external.LineStorage
-import il.ac.technion.cs.sd.grades.external.LineStorageFactoyImpl
+import il.ac.technion.cs.sd.books.dummy.StorageDummyFiles
+import il.ac.technion.cs.sd.books.external.LineStorage
+import il.ac.technion.cs.sd.books.external.LineStorageFactoyImpl
 import il.ac.technion.cs.sd.lib.UniquelyIdentifiedStorable
 
 /**
@@ -93,7 +93,7 @@ class StorageLibraryImpl:StorageLibrary{
             val reviewers_of_a_book_with_grade = LineStorageFactoyImpl.open("reviewers_of_a_book_and_grades_in_one_line")
             val reviewers_of_a_book_with_grade_ids = LineStorageFactoyImpl.open("reviewers_of_a_book_and_grades_in_one_line_with_grades_ids")
             val reviewers_of_a_book_with_grade_ids2 = LineStorageFactoyImpl.open("reviewers_of_a_book_in_one_line_without_grades_ids")//fun 7
-            val reviewers_of_a_book_=LineStorageFactoyImpl.open("reviewers_of_a_book_in_one_line_without_grades")//fun6
+            val reviewers_of_a_book_= LineStorageFactoyImpl.open("reviewers_of_a_book_in_one_line_without_grades")//fun6
 
             reviewers_of_a_book.forEach { (bookId, reviewers) ->
                 val formattedReviewers_with_grades = reviewers.joinToString(",") { (reviewer, grade) -> "$reviewer:$grade" }
@@ -110,7 +110,7 @@ class StorageLibraryImpl:StorageLibrary{
             val books_of_reviewer_with_grade = LineStorageFactoyImpl.open("books_of_a_reviewer_and_grades_in_one_line")
             val books_of_reviewer_with_grade_ids = LineStorageFactoyImpl.open("books_of_a_reviewer_and_grades_in_one_line_with_grades_ids")
             val books_of_reviewer_with_grade_ids2 = LineStorageFactoyImpl.open("books_of_a_reviewer_and_grades_in_one_line_without_grades_ids")//fun 4
-            val books_of_reviewer_=LineStorageFactoyImpl.open("books_of_a_reviewer_in_one_line_without_grades")//fun2
+            val books_of_reviewer_= LineStorageFactoyImpl.open("books_of_a_reviewer_in_one_line_without_grades")//fun2
 
             books_of_reviewers.forEach { (reviewerId, books) ->
                 val formattedbooks_with_grades = books.joinToString(",") { (book, grade) -> "$book:$grade" }
@@ -129,7 +129,7 @@ class StorageLibraryImpl:StorageLibrary{
         }
 
 // TODO:: IF IDS CAN CONTAIN "," :: i checked piazza and they answered alphanumeric chars
-        fun getLine(id:String,file:LineStorage): Int?{
+        fun getLine(id:String,file: LineStorage): Int?{
             val dataOfId= binarySearchIterativeFromExternal(id,file,true)
             return dataOfId?.first
         }
@@ -141,7 +141,7 @@ class StorageLibraryImpl:StorageLibrary{
          */
 
 
-        private fun binarySearchIterativeFromExternal(target: String,file:LineStorage,check_only_first_part:Boolean): Pair<Int, String>? {
+        private fun binarySearchIterativeFromExternal(target: String, file: LineStorage, check_only_first_part:Boolean): Pair<Int, String>? {
             var left = 0
             var right = file.numberOfLines() - 1
 
@@ -207,7 +207,7 @@ class StorageLibraryImpl:StorageLibrary{
         fun getAllReviewers(idBook: String):String?{
 
             val reviewers_of_a_book_with_grade_ids2 = LineStorageFactoyImpl.open("reviewers_of_a_book_in_one_line_without_grades_ids")//fun 7
-            val reviewers_of_a_book_=LineStorageFactoyImpl.open("reviewers_of_a_book_in_one_line_without_grades")//fun6
+            val reviewers_of_a_book_= LineStorageFactoyImpl.open("reviewers_of_a_book_in_one_line_without_grades")//fun6
             val line = getLine(idBook, reviewers_of_a_book_with_grade_ids2)
             return line?.let { reviewers_of_a_book_.read(it) }
 
@@ -223,7 +223,7 @@ class StorageLibraryImpl:StorageLibrary{
 
         }
         fun getAvgOfReviewer(idReviewer: String):String?{
-            val file2openids=LineStorageFactoyImpl.open("averages_of_reviewers_ids")
+            val file2openids= LineStorageFactoyImpl.open("averages_of_reviewers_ids")
             val line = getLine(idReviewer, file2openids)
             val file2open = LineStorageFactoyImpl.open("averages_of_reviewers")
             return line?.let { file2open.read(it) }
@@ -231,7 +231,7 @@ class StorageLibraryImpl:StorageLibrary{
 
         }
         fun getAvgOfBook(idBook: String):String?{
-            val file2openids=LineStorageFactoyImpl.open("averages_of_books_ids")
+            val file2openids= LineStorageFactoyImpl.open("averages_of_books_ids")
             val line = getLine(idBook, file2openids)
             val file2open = LineStorageFactoyImpl.open("averages_of_books")
             return line?.let { file2open.read(it) }
