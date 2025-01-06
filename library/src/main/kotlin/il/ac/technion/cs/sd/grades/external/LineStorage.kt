@@ -1,5 +1,4 @@
 package il.ac.technion.cs.sd.grades.external
-import il.ac.technion.cs.sd.dummy.StorageDummy
 import il.ac.technion.cs.sd.dummy.StorageDummyFiles
 import kotlin.system.measureTimeMillis
 
@@ -21,13 +20,15 @@ interface LineStorageFactory {
     fun open(filename: String): LineStorage
 }
 
-class LineStorageFactoyImpl:LineStorageFactory{
+object LineStorageFactoyImpl:LineStorageFactory{
 
     private val filesMap: MutableMap<String,LineStorage> = mutableMapOf()
 
     override fun open(filename:String):LineStorage{
-        if(filesMap.size > 12)//TODO::EXCEPTION ..?
-        val towait=(filesMap.size)*100// 100 for every file we created before
+        if (filesMap.size > 12) {
+            throw IllegalStateException("Too many files opened...check implementation ")
+        }
+        val towait = (filesMap.size)*100 // 100 for every file we created before
         Thread.sleep(towait.toLong())
         return filesMap.getOrPut(filename) { LineStorageImp(filename) }
 
@@ -45,7 +46,7 @@ interface LineStorage {
 
 
 class LineStorageImp(private val filename: String):LineStorage {
-    // TODO:: IN THE PDF ITS CALLED INTERFACE INESTORAGE ... WE DID NOT FIND IT IN THE FILES
+    // TODO:: IN THE PDF ITS CALLED INTERFACE LINESTORAGE ... WE DID NOT FIND IT IN THE FILES
 
         /** Appends a line to the END of the file */
         override  fun appendLine(line: String) {
