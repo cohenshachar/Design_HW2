@@ -1,5 +1,6 @@
 package il.ac.technion.cs.sd.grades.external
 import il.ac.technion.cs.sd.dummy.StorageDummy
+import il.ac.technion.cs.sd.dummy.StorageDummyFiles
 import kotlin.system.measureTimeMillis
 
 /**
@@ -15,19 +16,49 @@ import kotlin.system.measureTimeMillis
  * IMPORTANT: 1) DO NOT in any way alter the API of this class.
  *            2) DO NOT create any files under the package defined at the top of this file.
  */
-class LineStorage {
-    companion object {
+
+interface LineStorageFactory {
+    fun open(filename: String): LineStorage
+}
+
+class LineStorageFactoyImpl:LineStorageFactory{
+
+    private val filesMap: MutableMap<String,LineStorage> = mutableMapOf()
+
+    override fun open(filename:String):LineStorage{
+        if(filesMap.size > 12)//TODO::EXCEPTION ..?
+        val towait=(filesMap.size)*100// 100 for every file we created before
+        Thread.sleep(towait.toLong())
+        return filesMap.getOrPut(filename) { LineStorageImp(filename) }
+
+    }
+
+}
+
+// Interface for line storage operations
+interface LineStorage {
+    fun appendLine(line: String)
+    fun read(lineNumber: Int): String
+    fun numberOfLines(): Int
+}
+
+
+
+class LineStorageImp(private val filename: String):LineStorage {
+    // TODO:: IN THE PDF ITS CALLED INTERFACE INESTORAGE ... WE DID NOT FIND IT IN THE FILES
+
         /** Appends a line to the END of the file */
-        fun appendLine(line: String) {
-            StorageDummy.append(line)
+        override  fun appendLine(line: String) {
+
+            StorageDummyFiles.getOrCreateStorage(filename).append(line)
         }
 
         /** Returns the line at index lineNumber (0-indexed) */
-        fun read(lineNumber: Int): String {
+        override   fun read(lineNumber: Int): String {
 
             var toRtn=""
             val elapsed = measureTimeMillis {
-                  toRtn =  StorageDummy.get(lineNumber) ?: ""
+                  toRtn =  StorageDummyFiles.getOrCreateStorage(filename).get(lineNumber) ?: ""
                 val towait=(toRtn.length)
             //    println("Executing some task...")
                 Thread.sleep(towait.toLong()) // Example task that takes time
@@ -37,7 +68,7 @@ class LineStorage {
         }
 
         /** Returns the total number of lines in the file */
-        fun numberOfLines(): Int {
+        override   fun numberOfLines(): Int {
             val elapsed = measureTimeMillis {
 
              //   println("Executing some task...")
@@ -45,7 +76,7 @@ class LineStorage {
             }
 
         //    println("Done!after "+elapsed+"millis")
-            return StorageDummy.size()
+            return StorageDummyFiles.getOrCreateStorage(filename).size()
         }
-    }
+
 }

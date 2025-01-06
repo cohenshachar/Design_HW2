@@ -5,5 +5,13 @@ interface Storable {
 }
 
 interface UniquelyIdentifiedStorable :  Storable{
-    fun getId(): String
+
+    fun toStorageStringWithoutGrade():String
+    fun getIdBook(): String
+    fun getIdReviewer(): String
+    fun getGrade():Int
+
+
+
+
 }

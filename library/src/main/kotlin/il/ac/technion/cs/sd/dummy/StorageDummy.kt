@@ -1,6 +1,23 @@
 package il.ac.technion.cs.sd.dummy
 
-object StorageDummy {
+object StorageDummyFiles{
+    private val storages = mutableMapOf<String, StorageDummy>()
+
+    fun getOrCreateStorage(filename: String): StorageDummy {
+        return storages.getOrPut(filename) { StorageDummy(filename) }
+    }
+
+    fun clearAll() {
+        storages.values.forEach { it.clear() }
+    }
+
+    /** Removes storage for a specific file */
+    fun clearStorage(filename: String) {
+        storages.remove(filename)?.clear()
+    }
+}
+class StorageDummy(private val filename: String) {
+
 
     private val storage = mutableListOf<String>()
     fun append(item: String) {
