@@ -52,7 +52,6 @@ class LineStorageImp(private val filename: String):LineStorage {
 
             StorageDummyFiles.getOrCreateStorage(filename).append(line)
         }
-
         /** Returns the line at index lineNumber (0-indexed) */
         override   fun read(lineNumber: Int): String {
 
