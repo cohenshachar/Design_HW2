@@ -25,7 +25,7 @@ object LineStorageFactoyImpl: LineStorageFactory {
     private val filesMap: MutableMap<String, LineStorage> = mutableMapOf()
 
     override fun open(filename:String): LineStorage {
-        if (filesMap.size > 12) {
+        if (filesMap.size > 13) {
             throw IllegalStateException("Too many files opened...check implementation ")
         }
         val towait = (filesMap.size)*100 // 100 for every file we created before
