@@ -16,6 +16,7 @@ class XmlParser : Parser<XmlRoot> {
         return serializer.read(XmlRoot::class.java, xml)
     }
 }
+
 @Root(name = "Root")
 data class XmlRoot(
     @field:ElementList(name = "Reviewer", inline = true)
