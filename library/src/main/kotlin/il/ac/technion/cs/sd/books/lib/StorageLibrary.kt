@@ -1,7 +1,7 @@
 package il.ac.technion.cs.sd.lib
-import il.ac.technion.cs.sd.dummy.StorageDummy
-import il.ac.technion.cs.sd.grades.external.LineStorage
-import il.ac.technion.cs.sd.grades.external.LineStorageFactoyImpl
+import il.ac.technion.cs.sd.books.dummy.StorageDummy
+import il.ac.technion.cs.sd.books.external.LineStorage
+import il.ac.technion.cs.sd.books.external.LineStorageFactoyImpl
 /**
  * Implement your library here. Feel free to change the class name,
  * but note that if you choose to change the class name,
@@ -64,7 +64,7 @@ class GenericGradeManager<T> {
         avg_grades_of_reviewer.clear()
     }
 }
-class StorageLibrary {
+class StorageLibrary<T> {
     companion object {
         fun storeUnique(items: List<UniquelyIdentifiedStorable>) {
             // openning the file to insert into ..?
@@ -175,7 +175,7 @@ class StorageLibrary {
         }
 
 
-        fun getLine(id:String,file:LineStorage,splits:Int): Int?{
+        fun getLine(id:String, file: LineStorage, splits:Int): Int?{
             val dataOfId= binarySearchIterativeFromExternal(id,file,splits)
             return dataOfId?.first
         }
@@ -187,7 +187,7 @@ class StorageLibrary {
          */
 
 
-        private fun binarySearchIterativeFromExternal(target: String,file:LineStorage,splits:Int): Pair<Int, String>? {
+        private fun binarySearchIterativeFromExternal(target: String, file: LineStorage, splits:Int): Pair<Int, String>? {
             var left = 0
             var right = file.numberOfLines() - 1
 
@@ -245,7 +245,6 @@ class StorageLibrary {
 
         fun clearStorage() {
             StorageDummy.clear()
-
         }
     }
 

@@ -1,4 +1,4 @@
-package il.ac.technion.cs.sd.dummy
+package il.ac.technion.cs.sd.books.dummy
 
 object StorageDummyFiles{
     private val storages = mutableMapOf<String, StorageDummy>()
