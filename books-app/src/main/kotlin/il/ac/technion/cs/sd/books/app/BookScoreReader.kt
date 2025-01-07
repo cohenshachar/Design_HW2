@@ -1,6 +1,10 @@
 package il.ac.technion.cs.sd.books.app
 
+import com.google.inject.Inject
+import il.ac.technion.cs.sd.books.lib.StorageLibrary
 import il.ac.technion.cs.sd.books.lib.StorageLibraryImpl
+import il.ac.technion.cs.sd.books.modules.Parser
+import il.ac.technion.cs.sd.lib.Storable
 
 /**
  * This class will only be instantiated by kotlin-guice after
@@ -62,24 +66,24 @@ interface BookScoreReader {
 
 }
 
-class BookScoreReaderImpl : BookScoreReader {
-
+class BookScoreReaderImpl<T : Storable<T>> @Inject constructor(
+    private val storageLib: StorageLibrary<T>
+) : BookScoreReader {
     override fun gaveReview(reviewerId: String, bookId: String): Boolean {
-        return StorageLibraryImpl.checkIfGaveGrade(reviewerId, bookId)
+        return storageLib.hasReviewedBook(reviewerId, bookId)
     }
-
-    override fun getScore(reviewerId: String, bookId: String): Int? {
-        val grade = StorageLibraryImpl.retrieveGrade(reviewerId, bookId)
-        return grade?.toIntOrNull()
-    }
-
     override fun getReviewedBooks(reviewerId: String): List<String> {
-        val books = StorageLibraryImpl.getAllBooks(reviewerId)
+        val books = storageLib.getAllBooksReviewedBy(reviewerId)
         return books?.split(",")?.filter { it.isNotEmpty() }?.sorted() ?: emptyList()
     }
 
+    override fun getScore(reviewerId: String, bookId: String): Int? {
+        val grade = storageLib.getBookReviewScoreBy(reviewerId, bookId)
+        return grade?.toIntOrNull()
+    }
+
     override fun getAllReviewsByReviewer(reviewerId: String): Map<String, Int> {
-        val booksWithGrades = StorageLibraryImpl.getAllBooksWithGrades(reviewerId)
+        val booksWithGrades = storageLib.getAllBooksReviewedByWithScore(reviewerId)
         return booksWithGrades
             ?.split(",")
             ?.mapNotNull {
@@ -95,17 +99,17 @@ class BookScoreReaderImpl : BookScoreReader {
     }
 
     override fun getAverageScoreForReviewer(reviewerId: String): Double? {
-        val avg = StorageLibraryImpl.getAvgOfReviewer(reviewerId)
+        val avg = storageLib.getReviewerAvgScore(reviewerId)
         return avg?.toDoubleOrNull()
     }
 
     override fun getReviewers(bookId: String): List<String> {
-        val reviewers = StorageLibraryImpl.getAllReviewers(bookId)
+        val reviewers = storageLib.getAllReviewersOfBook(bookId)
         return reviewers?.split(",")?.filter { it.isNotEmpty() }?.sorted() ?: emptyList()
     }
 
     override fun getReviewsForBook(bookId: String): Map<String, Int> {
-        val reviewersWithGrades = StorageLibraryImpl.getAllReviewersWithGrades(bookId)
+        val reviewersWithGrades = storageLib.getAllReviewersOfBookWithScores(bookId)
         return reviewersWithGrades
             ?.split(",")
             ?.mapNotNull {
@@ -120,7 +124,7 @@ class BookScoreReaderImpl : BookScoreReader {
     }
 
     override fun getAverageScoreForBook(bookId: String): Double? {
-        val avg = StorageLibraryImpl.getAvgOfBook(bookId)
+        val avg = storageLib.getBookAvgScore(bookId)
         return avg?.toDoubleOrNull()
     }
 }
