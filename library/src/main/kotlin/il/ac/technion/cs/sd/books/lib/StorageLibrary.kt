@@ -1,7 +1,6 @@
 package il.ac.technion.cs.sd.books.lib
 import il.ac.technion.cs.sd.books.dummy.StorageDummyFiles
 import il.ac.technion.cs.sd.lib.Storable
-import il.ac.technion.cs.sd.lib.StorableReviews
 
 /**
  * Implement your library here. Feel free to change the class name,
@@ -13,8 +12,8 @@ import il.ac.technion.cs.sd.lib.StorableReviews
 interface StorageLibrary< T : Storable<T>>{
     fun store(itemsContainer : T)
 }
-class ReviewerStorageLibraryImpl<T : StorableReviews<T>> : StorageLibrary<T> {
-    override fun store(itemsContainer : T){
+class ReviewerStorageLibraryImpl<T : StorableReviewer<T>> : StorageLibrary<T> {
+    overfun store(itemsContainer : T)
         // Implementation to store the items
         val gradeStorage_reviewers_and_books = LineStorageFactoy.open("reviewers_and_books")
         val gradeStorage_reviewer_first = LineStorageFactoy.open("grades_that_reviewers_gave_books")
