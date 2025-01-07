@@ -12,7 +12,7 @@ import dev.misfitlabs.kotlinguice4.getInstance
 import il.ac.technion.cs.sd.books.app.BookScoreReader
 import il.ac.technion.cs.sd.books.app.BookScoreInitializer
 import il.ac.technion.cs.sd.books.app.BookScoreModule
-//import il.ac.technion.cs.sd.books.external.LineStorageModule
+import il.ac.technion.cs.sd.books.external.LineStorageModule
 
 
 class ExampleTest {

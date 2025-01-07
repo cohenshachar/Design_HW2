@@ -3,7 +3,8 @@ import com.google.inject.Inject
 import il.ac.technion.cs.sd.books.dummy.StorageDummyFiles
 import il.ac.technion.cs.sd.books.external.LineStorageFactory
 import il.ac.technion.cs.sd.books.external.LineStorage
-import il.ac.technion.cs.sd.lib.UniquelyIdentifiedStorable
+import il.ac.technion.cs.sd.lib.Storable
+import il.ac.technion.cs.sd.lib.StorableReviews
 
 /**
  * Implement your library here. Feel free to change the class name,
@@ -13,41 +14,53 @@ import il.ac.technion.cs.sd.lib.UniquelyIdentifiedStorable
  */
 
 interface StorageLibrary< T : Storable<T>>{
+
     fun store(itemsContainer : T)
+
+    fun hasReviewedBook(idReviewer: String,idBook: String): Boolean
+
+    fun getBookReviewScoreBy(idReviewer: String,idBook: String):String?
+    fun getAllBooksReviewedBy(idReviewer: String): String?
+    fun getAllBooksReviewedByWithScore(idReviewer: String): String?
+    fun getBookAvgScore(idBook: String):String?
+    fun getReviewerAvgScore(idReviewer: String):String?
+    fun getAllReviewersOfBook(idBook: String):String?
+    fun getAllReviewersOfBookWithScores(idBook: String):String?
+    fun clearStorage()
 }
 
-class StorageLibraryImpl @Inject constructor(
+class StorageLibraryImpl<T:StorableReviews<T>> @Inject constructor(
     private val lineStorageFactory: LineStorageFactory
-) : StorageLibrary {
+) : StorageLibrary<T> {
 
-        fun storeUnique(items: List<UniquelyIdentifiedStorable>) {
+        override fun store(itemsContainer: T) {
             // openning the file to insert into ..?
             // reviewer first
 
 
             val gradeStorage_reviewers_and_books = lineStorageFactory.open("reviewers_and_books")
             val gradeStorage_reviewer_first = lineStorageFactory.open("grades_that_reviewers_gave_books")
-
-            items
-                .groupBy { it.getIdReviewer() } // Associate by reviewer ID
-                .toSortedMap(compareBy<String> { it } // Sort by reviewer ID
-                    .thenBy { key -> items.find { it.getIdReviewer() == key }?.getIdBook() ?: 0 } // Then by book ID
-                )
-                .values
-                .flatten() // Flattening the grouped items (since groupBy creates lists)
-                .forEach { item -> gradeStorage_reviewer_first.appendLine(item.toStorageString()) // fun1
-                     gradeStorage_reviewers_and_books.appendLine(item.toStorageStringWithoutGrade())/*fun3*/ }
-
-
-
-
-            //fun5
-            val reviewerAverages: Map<String, Double> = items
-
-                .groupBy { it.getIdReviewer() } // Group items by reviewer ID
-                .mapValues { (_, reviews) ->
-                    reviews.map { it.getGrade().toDouble() }.average() // Calculate the average for each reviewer
+            val booksReviewerScore: Map<String, List<Pair<String, String>>> = itemsContainer.getBooksReviewerScore()
+            val transformedAndSorted = booksReviewerScore
+                .flatMap { (reviewerId, bookScores) ->
+                    bookScores.map { (bookId, grade) ->
+                        "$reviewerId,$bookId" to grade
+                    }
                 }
+                .toMap() // Convert the list of pairs to a map
+                .toSortedMap() // Sort the map by the key
+
+            transformedAndSorted.forEach { (key, value) ->
+
+                gradeStorage_reviewer_first.appendLine("$key")
+                gradeStorage_reviewers_and_books.appendLine("$key,$value")
+            }
+
+
+            val reviewersAvgScore: Map<String, String> = itemsContainer.getReviewersAvgScore()
+
+            val reviewerAverages: Map<String, Double> = reviewersAvgScore
+                .mapValues { entry -> entry.value.toDoubleOrNull() ?: 11.0 } // Convert to Double
                 .toSortedMap()
 
 
@@ -60,20 +73,17 @@ class StorageLibraryImpl @Inject constructor(
             }
 
             // averages for books// fun8
-            val bookGradesAverages: Map<String, Double> = items
-                .groupBy { it.getIdBook()} // Group items by reviewer ID
-                .mapValues { (_, reviews) ->
-                    reviews.map { it.getGrade().toDouble() }.average() // Calculate the average for each reviewer
-                }
+            val bookGradesAverages: Map<String, Double> = itemsContainer.getBooksAvgScore()
+                .mapValues { entry -> entry.value.toDoubleOrNull() ?: 11.0 } // Convert to Double
                 .toSortedMap()
 
-            val avgs_file_books_ids= lineStorageFactory.open("averages_of_books_ids")
-            val avgs_file_books= lineStorageFactory.open("averages_of_books")
+
+            val avgs_file_books_ids = lineStorageFactory.open("averages_of_books_ids")
+            val avgs_file_books = lineStorageFactory.open("averages_of_books")
             bookGradesAverages.forEach { (bookId, average) ->
                 avgs_file_books_ids.appendLine("$bookId")
                 avgs_file_books.appendLine("$average")
             }
-
 
 
             // books and their grades
@@ -82,56 +92,62 @@ class StorageLibraryImpl @Inject constructor(
             // Mapping for each book: reviewers and their grades
             val reviewers_of_a_book: MutableMap<String, MutableList<Pair<String, Int>>> = mutableMapOf()
             val books_of_reviewers: MutableMap<String, MutableList<Pair<String, Int>>> = mutableMapOf()
-            items.forEach { item ->
-                val bookId = item.getIdBook()
-                val reviewerId = item.getIdReviewer()
-                val grade = item.getGrade()
+            itemsContainer.getReviewersReviews().forEach { (reviewerId, reviews) ->
+                reviews.forEach { review ->
+                    val (bookId, grade) = review.removeSurrounding("review(", ")") // Removes the surrounding "review("
+                        .split(",")
+                        .let { it[0].split("=")[1] to it[1].split("=")[1] }
+                    reviewers_of_a_book.computeIfAbsent(bookId) { mutableListOf() }
+                        .add(Pair(reviewerId, grade.toInt()))
+                    books_of_reviewers.computeIfAbsent(reviewerId) { mutableListOf() }
+                        .add(Pair(bookId, grade.toInt()))
 
-                // Add the reviewer and grade to the list for the book
-                reviewers_of_a_book.computeIfAbsent(bookId) { mutableListOf() }
-                    .add(Pair(reviewerId, grade))
-                books_of_reviewers.computeIfAbsent(reviewerId){ mutableListOf() }
-                    .add(Pair(bookId,grade))
+                }
+
+                val reviewers_of_a_book_with_grade =
+                    lineStorageFactory.open("reviewers_of_a_book_and_grades_in_one_line")
+                val reviewers_of_a_book_with_grade_ids =
+                    lineStorageFactory.open("reviewers_of_a_book_and_grades_in_one_line_with_grades_ids")
+                val reviewers_of_a_book_with_grade_ids2 =
+                    lineStorageFactory.open("reviewers_of_a_book_in_one_line_without_grades_ids")//fun 7
+                val reviewers_of_a_book_ =
+                    lineStorageFactory.open("reviewers_of_a_book_in_one_line_without_grades")//fun6
+
+                reviewers_of_a_book.forEach { (bookId, reviewers) ->
+                    val formattedReviewers_with_grades =
+                        reviewers.joinToString(",") { (reviewer, grade) -> "$reviewer:$grade" }
+                    val formattedReviewers_without_grades =
+                        reviewers.joinToString(",") { (reviewer, grade) -> "$reviewer" }
+                    reviewers_of_a_book_with_grade_ids.appendLine("$bookId")
+                    reviewers_of_a_book_with_grade_ids2.appendLine(("$bookId"))
+                    reviewers_of_a_book_with_grade.appendLine("$formattedReviewers_with_grades")
+                    reviewers_of_a_book_.appendLine("$formattedReviewers_without_grades")
+
+                }
+                // Writing the data to a file
+
+                val books_of_reviewer_with_grade = lineStorageFactory.open("books_of_a_reviewer_and_grades_in_one_line")
+                val books_of_reviewer_with_grade_ids =
+                    lineStorageFactory.open("books_of_a_reviewer_and_grades_in_one_line_with_grades_ids")
+                val books_of_reviewer_with_grade_ids2 =
+                    lineStorageFactory.open("books_of_a_reviewer_and_grades_in_one_line_without_grades_ids")//fun 4
+                val books_of_reviewer_ = lineStorageFactory.open("books_of_a_reviewer_in_one_line_without_grades")//fun2
+
+                books_of_reviewers.forEach { (reviewerId, books) ->
+                    val formattedbooks_with_grades = books.joinToString(",") { (book, grade) -> "$book:$grade" }
+                    val formattedbooks_without_grades = books.joinToString(",") { (book, grade) -> "$book" }
+                    books_of_reviewer_with_grade_ids.appendLine("$reviewerId")
+                    books_of_reviewer_with_grade_ids2.appendLine(("$reviewerId"))
+                    books_of_reviewer_with_grade.appendLine("$formattedbooks_with_grades")
+                    books_of_reviewer_.appendLine("$formattedbooks_without_grades")
+
+                }
+                // 13 files -> ((13 * 12)/2 )*100 = 7800 -> 8 sec for creating files but this is in setup
+
+                // in answering the queries will be given 1300 * 5 = 6500 -> 7 sec for openning ...
+
             }
-
-            val reviewers_of_a_book_with_grade = lineStorageFactory.open("reviewers_of_a_book_and_grades_in_one_line")
-            val reviewers_of_a_book_with_grade_ids = lineStorageFactory.open("reviewers_of_a_book_and_grades_in_one_line_with_grades_ids")
-            val reviewers_of_a_book_with_grade_ids2 = lineStorageFactory.open("reviewers_of_a_book_in_one_line_without_grades_ids")//fun 7
-            val reviewers_of_a_book_= lineStorageFactory.open("reviewers_of_a_book_in_one_line_without_grades")//fun6
-
-            reviewers_of_a_book.forEach { (bookId, reviewers) ->
-                val formattedReviewers_with_grades = reviewers.joinToString(",") { (reviewer, grade) -> "$reviewer:$grade" }
-                val formattedReviewers_without_grades = reviewers.joinToString(",") { (reviewer, grade) -> "$reviewer" }
-                reviewers_of_a_book_with_grade_ids.appendLine("$bookId")
-                reviewers_of_a_book_with_grade_ids2.appendLine(("$bookId"))
-                reviewers_of_a_book_with_grade.appendLine("$formattedReviewers_with_grades")
-                reviewers_of_a_book_.appendLine("$formattedReviewers_without_grades")
-
-            }
-
-        // Writing the data to a file
-
-            val books_of_reviewer_with_grade = lineStorageFactory.open("books_of_a_reviewer_and_grades_in_one_line")
-            val books_of_reviewer_with_grade_ids = lineStorageFactory.open("books_of_a_reviewer_and_grades_in_one_line_with_grades_ids")
-            val books_of_reviewer_with_grade_ids2 = lineStorageFactory.open("books_of_a_reviewer_and_grades_in_one_line_without_grades_ids")//fun 4
-            val books_of_reviewer_= lineStorageFactory.open("books_of_a_reviewer_in_one_line_without_grades")//fun2
-
-            books_of_reviewers.forEach { (reviewerId, books) ->
-                val formattedbooks_with_grades = books.joinToString(",") { (book, grade) -> "$book:$grade" }
-                val formattedbooks_without_grades = books.joinToString(",") { (book, grade) -> "$book" }
-                books_of_reviewer_with_grade_ids.appendLine("$reviewerId")
-                books_of_reviewer_with_grade_ids2.appendLine(("$reviewerId"))
-                books_of_reviewer_with_grade.appendLine("$formattedbooks_with_grades")
-                books_of_reviewer_.appendLine("$formattedbooks_without_grades")
-
-
-            }
-            // 13 files -> ((13 * 12)/2 )*100 = 7800 -> 8 sec for creating files but this is in setup
-
-            // in answering the queries will be given 1300 * 5 = 6500 -> 7 sec for openning ...
-
         }
-
 // TODO:: IF IDS CAN CONTAIN "," :: i checked piazza and they answered alphanumeric chars
         fun getLine(id:String,file: LineStorage): Int?{
             val dataOfId= binarySearchIterativeFromExternal(id,file,true)
@@ -177,13 +193,14 @@ class StorageLibraryImpl @Inject constructor(
         }
 
 
-        fun retrieveGrade(idReviewer: String,idBook: String):String?{
-            val gradeStorage_reviewer_first = LineStorageFactoyImpl.open("grades_that_reviewers_gave_books")
+        override fun getBookReviewScoreBy(idReviewer: String,idBook: String):String?{
+            val gradeStorage_reviewer_first = lineStorageFactory.open("grades_that_reviewers_gave_books")
             val dataFound=binarySearchIterativeFromExternal(idReviewer+','+idBook,gradeStorage_reviewer_first,false)
             return dataFound?.second
         }
-        fun checkIfGaveGrade(idReviewer: String,idBook: String):Boolean {
-            val gradeStorage_reviewer_first = LineStorageFactoyImpl.open("reviewers_and_books")
+
+        override fun hasReviewedBook(idReviewer: String,idBook: String):Boolean {
+            val gradeStorage_reviewer_first = lineStorageFactory.open("reviewers_and_books")
             val dataFound = binarySearchIterativeFromExternal(idReviewer + ',' + idBook, gradeStorage_reviewer_first,false)
             return if (dataFound == null) {
                 false
@@ -192,14 +209,14 @@ class StorageLibraryImpl @Inject constructor(
                 true
             }
         }
-        override fun getAllBooks(idReviewer: String): String? {
+        override fun getAllBooksReviewedBy(idReviewer: String): String? {
             val books_of_reviewer_with_grade_ids2 = lineStorageFactory.open("books_of_a_reviewer_and_grades_in_one_line_without_grades_ids") // fun 4
             val books_of_reviewer_ = lineStorageFactory.open("books_of_a_reviewer_in_one_line_without_grades") // fun 2
             val line = getLine(idReviewer, books_of_reviewer_with_grade_ids2)
             return line?.let { books_of_reviewer_.read(it) }
         }
 
-        override fun getAllBooksWithGrades(idReviewer: String): String? {
+        override fun getAllBooksReviewedByWithScore(idReviewer: String): String? {
             val books_of_reviewer_with_grade = lineStorageFactory.open("books_of_a_reviewer_and_grades_in_one_line")
             val books_of_reviewer_with_grade_ids = lineStorageFactory.open("books_of_a_reviewer_and_grades_in_one_line_with_grades_ids")
             val line = getLine(idReviewer, books_of_reviewer_with_grade_ids)
@@ -208,7 +225,7 @@ class StorageLibraryImpl @Inject constructor(
 
         }
 
-        fun getAllReviewers(idBook: String):String?{
+        override fun getAllReviewersOfBook(idBook: String):String?{
 
             val reviewers_of_a_book_with_grade_ids2 = lineStorageFactory.open("reviewers_of_a_book_in_one_line_without_grades_ids")//fun 7
             val reviewers_of_a_book_= lineStorageFactory.open("reviewers_of_a_book_in_one_line_without_grades")//fun6
@@ -218,7 +235,7 @@ class StorageLibraryImpl @Inject constructor(
 
         }
 
-        override fun getAllReviewersWithGrades(idBook: String):String?{
+        override fun getAllReviewersOfBookWithScores(idBook: String):String?{
             val reviewers_of_a_book_with_grade = lineStorageFactory.open("reviewers_of_a_book_and_grades_in_one_line")
             val reviewers_of_a_book_with_grade_ids = lineStorageFactory.open("reviewers_of_a_book_and_grades_in_one_line_with_grades_ids")
             val line = getLine(idBook, reviewers_of_a_book_with_grade_ids)
@@ -226,7 +243,7 @@ class StorageLibraryImpl @Inject constructor(
 
 
         }
-        override fun getAvgOfReviewer(idReviewer: String):String?{
+        override fun getReviewerAvgScore(idReviewer: String):String?{
             val file2openids= lineStorageFactory.open("averages_of_reviewers_ids")
             val line = getLine(idReviewer, file2openids)
             val file2open = lineStorageFactory.open("averages_of_reviewers")
@@ -235,7 +252,7 @@ class StorageLibraryImpl @Inject constructor(
 
         }
 
-        override fun getAvgOfBook(idBook: String):String?{
+        override fun getBookAvgScore(idBook: String):String?{
             val file2openids= lineStorageFactory.open("averages_of_books_ids")
             val line = getLine(idBook, file2openids)
             val file2open = lineStorageFactory.open("averages_of_books")
@@ -245,14 +262,11 @@ class StorageLibraryImpl @Inject constructor(
 
         }
 
-
-
-
-        fun clearStorage() {
+        override fun clearStorage() {
 
             StorageDummyFiles.clearAll()
 
         }
     }
 
-}
+

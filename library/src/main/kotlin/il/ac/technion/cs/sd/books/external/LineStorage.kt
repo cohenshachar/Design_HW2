@@ -1,6 +1,5 @@
 package il.ac.technion.cs.sd.books.external
 import dev.misfitlabs.kotlinguice4.KotlinModule
-import com.google.inject.Inject
 import com.google.inject.Singleton
 import il.ac.technion.cs.sd.books.dummy.StorageDummyFiles
 import kotlin.system.measureTimeMillis
