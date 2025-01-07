@@ -12,18 +12,8 @@ import il.ac.technion.cs.sd.lib.UniquelyIdentifiedStorable
  * and in GradesReader.kt.
  */
 
-interface StorageLibrary {
-    fun retrieveGrade(idReviewer: String,idBook: String):String?
-    fun getLine(id:String,file: LineStorage): Int?
-    fun getAvgOfBook(idBook: String):String?
-    fun getAvgOfReviewer(idReviewer: String):String?
-    fun getAllReviewersWithGrades(idBook: String):String?
-    fun getAllReviewers(idBook: String):String?
-
-    fun getAllBooksWithGrades(idReviewer: String): String?
-    fun getAllBooks(idReviewer: String): String?
-    fun checkIfGaveGrade(idReviewer: String,idBook: String):Boolean
-    fun clearStorage()
+interface StorageLibrary< T : Storable<T>>{
+    fun store(itemsContainer : T)
 }
 
 class StorageLibraryImpl @Inject constructor(
@@ -143,8 +133,7 @@ class StorageLibraryImpl @Inject constructor(
         }
 
 // TODO:: IF IDS CAN CONTAIN "," :: i checked piazza and they answered alphanumeric chars
-
-        override fun getLine(id:String, file: LineStorage): Int?{
+        fun getLine(id:String,file: LineStorage): Int?{
             val dataOfId= binarySearchIterativeFromExternal(id,file,true)
             return dataOfId?.first
         }
@@ -188,15 +177,13 @@ class StorageLibraryImpl @Inject constructor(
         }
 
 
-        override fun retrieveGrade(idReviewer: String, idBook: String):String?{
-            val gradeStorage_reviewer_first = lineStorageFactory.open("grades_that_reviewers_gave_books")
+        fun retrieveGrade(idReviewer: String,idBook: String):String?{
+            val gradeStorage_reviewer_first = LineStorageFactoyImpl.open("grades_that_reviewers_gave_books")
             val dataFound=binarySearchIterativeFromExternal(idReviewer+','+idBook,gradeStorage_reviewer_first,false)
             return dataFound?.second
         }
-
-
-    override fun checkIfGaveGrade(idReviewer: String, idBook: String):Boolean {
-            val gradeStorage_reviewer_first = lineStorageFactory.open("reviewers_and_books")
+        fun checkIfGaveGrade(idReviewer: String,idBook: String):Boolean {
+            val gradeStorage_reviewer_first = LineStorageFactoyImpl.open("reviewers_and_books")
             val dataFound = binarySearchIterativeFromExternal(idReviewer + ',' + idBook, gradeStorage_reviewer_first,false)
             return if (dataFound == null) {
                 false
@@ -221,7 +208,7 @@ class StorageLibraryImpl @Inject constructor(
 
         }
 
-        override fun getAllReviewers(idBook: String):String?{
+        fun getAllReviewers(idBook: String):String?{
 
             val reviewers_of_a_book_with_grade_ids2 = lineStorageFactory.open("reviewers_of_a_book_in_one_line_without_grades_ids")//fun 7
             val reviewers_of_a_book_= lineStorageFactory.open("reviewers_of_a_book_in_one_line_without_grades")//fun6
@@ -261,11 +248,11 @@ class StorageLibraryImpl @Inject constructor(
 
 
 
-        override fun clearStorage() {
+        fun clearStorage() {
 
             StorageDummyFiles.clearAll()
 
         }
-
+    }
 
 }
