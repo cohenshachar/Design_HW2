@@ -1,5 +1,6 @@
 package il.ac.technion.cs.sd.books.modules
 import il.ac.technion.cs.sd.lib.StorableReviews
+import org.simpleframework.xml.Attribute
 import org.simpleframework.xml.Element
 import org.simpleframework.xml.ElementList
 import org.simpleframework.xml.Root
@@ -12,8 +13,15 @@ interface Parser<T> {
 }
 class XmlParser : Parser<XmlRoot> {
     override fun parse(xml: String): XmlRoot {
-        val serializer = Persister()
-        return serializer.read(XmlRoot::class.java, xml)
+        return try {
+            if (xml.isBlank()) {
+                return XmlRoot() // Return an empty XmlRoot object as a default value
+            }
+            Persister().read(XmlRoot()::class.java, xml)
+        } catch (e: Exception) {
+            println("Error parsing XML: ${e.message}")
+            return XmlRoot() // Return an empty XmlRoot object as a default value
+        }
     }
 }
 
@@ -31,15 +39,15 @@ data class XmlRoot(
         val reviewerMap = mutableMapOf<String, Reviewer>()
         val booksMap = mutableMapOf<String, Book>()
         reviewers.asReversed().asSequence().forEach { reviewer ->
-            val uniqueReviewer = reviewerMap.getOrPut(reviewer.id) { Reviewer(reviewer.id, reviewer.reviews.toMutableList()) }
-            val uniqueReviews = reviewer.reviews.asSequence().filter { newReview -> uniqueReviewer.reviews.none { it.id == newReview.id } }
+            val uniqueReviewer = reviewerMap.getOrPut(reviewer.id) { Reviewer(id = reviewer.id) }
+            val uniqueReviews = reviewer.reviews.asReversed().asSequence().filter { newReview -> uniqueReviewer.reviews.none { it.id == newReview.id } }
             uniqueReviews.forEach { review ->
                 val uniqueBook = booksMap.getOrPut(review.id) { Book(id = review.id, reviews = mutableMapOf()) }
                 uniqueBook.reviews.putIfAbsent(reviewer.id, review)
                 uniqueBook.avgScore += review.score
                 uniqueReviewer.reviews.add(review)
                 uniqueReviewer.avgScore += review.score
-                }
+            }
         }
         reviewers = reviewerMap.values.toMutableList()
         reviewers.asSequence().forEach { it.avgScore /= it.reviews.size }
@@ -66,12 +74,14 @@ data class XmlRoot(
             }.toList()
         }
     }
+    //hello
+
 
 }
 
 @Root(name = "Reviewer")
 data class Reviewer(
-    @field:Element(name = "Id", required = false)
+    @field:Attribute(name = "Id", required = false)
     var id: String = "",
 
     @field:ElementList(name = "Review", inline = true)

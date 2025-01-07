@@ -15,6 +15,6 @@ class BookScoreInitializerImpl<T : StorableReviews<T>> @Inject constructor(
     /** Saves the XML data persistently, so that it could be queried using BookScoreReader */
     override fun setup(xmlData: String) {
         val data: T = parser.parse(xmlData)
-        storageLib.store(data) // Save the unified reviewers
+      //  storageLib.store(data) // Save the unified reviewers
     }
 }
