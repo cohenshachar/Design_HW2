@@ -1,5 +1,4 @@
 package il.ac.technion.cs.sd.books.app
-
 import com.google.inject.Inject
 import il.ac.technion.cs.sd.books.lib.StorageLibrary
 import il.ac.technion.cs.sd.books.lib.StorageLibraryImpl
@@ -72,14 +71,15 @@ class BookScoreReaderImpl<T : Storable<T>> @Inject constructor(
     override fun gaveReview(reviewerId: String, bookId: String): Boolean {
         return storageLib.hasReviewedBook(reviewerId, bookId)
     }
-    override fun getReviewedBooks(reviewerId: String): List<String> {
-        val books = storageLib.getAllBooksReviewedBy(reviewerId)
-        return books?.split(",")?.filter { it.isNotEmpty() }?.sorted() ?: emptyList()
-    }
 
     override fun getScore(reviewerId: String, bookId: String): Int? {
         val grade = storageLib.getBookReviewScoreBy(reviewerId, bookId)
         return grade?.toIntOrNull()
+    }
+
+    override fun getReviewedBooks(reviewerId: String): List<String> {
+        val books = storageLib.getAllBooksReviewedBy(reviewerId)
+        return books?.split(",")?.filter { it.isNotEmpty() }?.sorted() ?: emptyList()
     }
 
     override fun getAllReviewsByReviewer(reviewerId: String): Map<String, Int> {

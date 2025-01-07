@@ -15,5 +15,3 @@ class BookScoreModule : KotlinModule() {
         //  bind(object : TypeLiteral<StorageLibrary<xmlRoot>>() {}).to(StorageLibraryImpl::class)
     }
 }
-
-
