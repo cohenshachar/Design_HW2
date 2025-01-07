@@ -8,6 +8,9 @@ import org.simpleframework.xml.core.Commit
 import org.simpleframework.xml.core.Persister
 
 
+class shachar_clash_git{
+
+}
 interface Parser<T> {
     fun parse(xml: String): T
 }
