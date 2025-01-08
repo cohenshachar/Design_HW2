@@ -13,6 +13,7 @@ import il.ac.technion.cs.sd.books.app.BookScoreReader
 import il.ac.technion.cs.sd.books.app.BookScoreInitializer
 import il.ac.technion.cs.sd.books.app.BookScoreModule
 import il.ac.technion.cs.sd.books.external.LineStorageModule
+import il.ac.technion.cs.sd.books.lib.StorageLibraryModule
 
 
 class ExampleTest {
