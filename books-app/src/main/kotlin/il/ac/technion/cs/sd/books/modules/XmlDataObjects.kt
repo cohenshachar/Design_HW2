@@ -7,8 +7,6 @@ import org.simpleframework.xml.Root
 import org.simpleframework.xml.core.Commit
 import org.simpleframework.xml.core.Persister
 import com.google.inject.Inject
-import com.google.inject.Provider
-import com.google.inject.Singleton
 import il.ac.technion.cs.sd.lib.Storable
 
 
@@ -49,13 +47,14 @@ data class XmlRoot(
         val booksMap = mutableMapOf<String, Book>()
         reviewers.asReversed().asSequence().forEach { reviewer ->
             val uniqueReviewer = reviewerMap.getOrPut(reviewer.id) { Reviewer(id = reviewer.id) }
-            val uniqueReviews = reviewer.reviews.asReversed().asSequence().filter { newReview -> uniqueReviewer.reviews.none { it.id == newReview.id } }
-            uniqueReviews.forEach { review ->
-                val uniqueBook = booksMap.getOrPut(review.id) { Book(id = review.id, reviews = mutableMapOf()) }
-                uniqueBook.reviews.putIfAbsent(reviewer.id, review)
-                uniqueBook.avgScore += review.score
-                uniqueReviewer.reviews.add(review)
-                uniqueReviewer.avgScore += review.score
+            reviewer.reviews.asReversed().asSequence().forEach { review ->
+                if (uniqueReviewer.reviews.none { it.id == review.id }) {
+                    val uniqueBook = booksMap.getOrPut(review.id) { Book(id = review.id, avgScore = 0.0, reviews = mutableMapOf()) }
+                    uniqueBook.reviews.putIfAbsent(reviewer.id, review)
+                    uniqueBook.avgScore += review.score
+                    uniqueReviewer.reviews.add(review)
+                    uniqueReviewer.avgScore += review.score
+                }
             }
         }
         reviewers = reviewerMap.values.toMutableList()
