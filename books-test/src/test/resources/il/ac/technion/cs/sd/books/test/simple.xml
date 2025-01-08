@@ -1,0 +1,8 @@
+<Root>
+    <Reviewer Id="123">
+        <Review>
+            <Id>Foobar</Id>
+            <Score>10</Score>
+        </Review>
+    </Reviewer>
+</Root>

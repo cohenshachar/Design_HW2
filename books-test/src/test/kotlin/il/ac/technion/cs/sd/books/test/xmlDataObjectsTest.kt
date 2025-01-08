@@ -2,6 +2,7 @@ package il.ac.technion.cs.sd.books.test
 
 import com.google.inject.*
 import il.ac.technion.cs.sd.books.app.BookScoreModule
+import il.ac.technion.cs.sd.books.external.LineStorageModule
 import il.ac.technion.cs.sd.books.lib.StorageLibraryModule
 import il.ac.technion.cs.sd.books.modules.*
 import org.junit.jupiter.api.Assertions.*
@@ -22,7 +23,7 @@ internal class XmlDataStructsTest {
 
     @BeforeEach
     fun setUp() {
-        injector = Guice.createInjector(StorageLibraryModule(), BookScoreModule())
+        injector = Guice.createInjector(LineStorageModule(), BookScoreModule())
         val parserKey = Key.get(object : TypeLiteral<Parser<XmlRoot>>() {})
         parser = injector.getInstance(parserKey)
     }
