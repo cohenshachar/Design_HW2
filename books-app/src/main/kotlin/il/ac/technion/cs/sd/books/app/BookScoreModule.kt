@@ -16,4 +16,3 @@ class BookScoreModule : KotlinModule() {
         bind(BookScoreReader::class.java).to(object : TypeLiteral<BookScoreReaderImpl<StorableReviews>>() {})
     }
 }
-
