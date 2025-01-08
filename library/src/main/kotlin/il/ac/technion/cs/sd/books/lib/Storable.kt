@@ -1,10 +1,10 @@
 package il.ac.technion.cs.sd.lib
 
-interface Storable<T>{
+interface Storable{
 
 }
 
-interface StorableReviews<T> : Storable<T> {
+interface StorableReviews : Storable {
     fun getReviewersAvgScore() : Map<String , String>//v
     fun getReviewersReviews() : Map<String , List<String>>//
     fun getBooksAvgScore() : Map<String , String>// v

@@ -22,7 +22,7 @@ class ExampleTest {
             javaClass.getResource(fileName)?.readText() ?:
             throw FileNotFoundException("Could not open file $fileName")
 
-        val injector = Guice.createInjector(BookScoreModule(), LineStorageModule())
+        val injector = Guice.createInjector( BookScoreModule(), LineStorageModule())
         injector.getInstance<BookScoreInitializer>().setup(fileContents)
         return injector.getInstance<BookScoreReader>()
     }

@@ -6,24 +6,30 @@ import org.simpleframework.xml.ElementList
 import org.simpleframework.xml.Root
 import org.simpleframework.xml.core.Commit
 import org.simpleframework.xml.core.Persister
+import com.google.inject.Inject
+import com.google.inject.Provider
+import com.google.inject.Singleton
+import il.ac.technion.cs.sd.lib.Storable
 
 
-class shachar_clash_git{
-
-}
-interface Parser<T> {
+interface Parser<T : Storable> {
     fun parse(xml: String): T
 }
-class XmlParser : Parser<XmlRoot> {
-    override fun parse(xml: String): XmlRoot {
+
+class XmlParser<T : StorableReviews> @Inject constructor(
+    private val serializer: Persister,
+    private val clazz: Class<T>
+) : Parser<T> {
+    override fun parse(xml: String): T {
         return try {
             if (xml.isBlank()) {
-                return XmlRoot() // Return an empty XmlRoot object as a default value
+                clazz.getDeclaredConstructor().newInstance() // Return an empty instance of T as a default value
+            } else {
+                serializer.read(clazz, xml)
             }
-            Persister().read(XmlRoot()::class.java, xml)
         } catch (e: Exception) {
             println("Error parsing XML: ${e.message}")
-            return XmlRoot() // Return an empty XmlRoot object as a default value
+            clazz.getDeclaredConstructor().newInstance() // Return an empty instance of T as a default value
         }
     }
 }
@@ -33,7 +39,7 @@ data class XmlRoot(
     @field:ElementList(name = "Reviewer", inline = true)
     var reviewers: MutableList<Reviewer> = mutableListOf(),
     var books: MutableList<Book> = mutableListOf()
-) : StorableReviews<XmlRoot> {
+) : StorableReviews {
     @Commit
     fun afterDeserialization() {
         unifyReviews()
@@ -77,9 +83,6 @@ data class XmlRoot(
             }.toList()
         }
     }
-    //hello
-
-
 }
 
 @Root(name = "Reviewer")

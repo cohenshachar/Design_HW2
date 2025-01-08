@@ -1,9 +1,8 @@
 package il.ac.technion.cs.sd.books.app
 import com.google.inject.Inject
 import il.ac.technion.cs.sd.books.lib.StorageLibrary
-import il.ac.technion.cs.sd.books.lib.StorageLibraryImpl
-import il.ac.technion.cs.sd.books.modules.Parser
 import il.ac.technion.cs.sd.lib.Storable
+import il.ac.technion.cs.sd.lib.StorableReviews
 
 /**
  * This class will only be instantiated by kotlin-guice after
@@ -65,7 +64,7 @@ interface BookScoreReader {
 
 }
 
-class BookScoreReaderImpl<T : Storable<T>> @Inject constructor(
+class BookScoreReaderImpl<T : Storable> @Inject constructor(
     private val storageLib: StorageLibrary<T>
 ) : BookScoreReader {
     override fun gaveReview(reviewerId: String, bookId: String): Boolean {

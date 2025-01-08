@@ -13,12 +13,10 @@ import il.ac.technion.cs.sd.lib.StorableReviews
  * and in GradesReader.kt.
  */
 
-interface StorageLibrary< T : Storable<T>>{
+interface StorageLibrary< T : Storable>{
 
     fun store(itemsContainer : T)
-
     fun hasReviewedBook(idReviewer: String,idBook: String): Boolean
-
     fun getBookReviewScoreBy(idReviewer: String,idBook: String):String?
     fun getAllBooksReviewedBy(idReviewer: String): String?
     fun getAllBooksReviewedByWithScore(idReviewer: String): String?
@@ -29,7 +27,7 @@ interface StorageLibrary< T : Storable<T>>{
     fun clearStorage()
 }
 
-class StorageLibraryImpl<T:StorableReviews<T>> @Inject constructor(
+class StorageLibraryImpl<T:StorableReviews> @Inject constructor(
     private val lineStorageFactory: LineStorageFactory
 ) : StorageLibrary<T> {
 

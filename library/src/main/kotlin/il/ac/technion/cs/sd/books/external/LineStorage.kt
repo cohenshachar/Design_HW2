@@ -76,7 +76,6 @@ class LineStorageImpl(private val filename: String) : LineStorage {
 class LineStorageModule : KotlinModule() {
     override fun configure() {
         bind(LineStorageFactory::class.java).toInstance(LineStorageFactoryImpl)
-
     }
 }
 
